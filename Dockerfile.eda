@@ -1,0 +1,16 @@
+# EDA UI image for eda-server-operator.
+# The operator injects its own nginx.conf (serves /usr/share/nginx/html on 8080),
+# so this image only needs nginx + the built frontend/eda bundle.
+# ponytail: bundle is built on the host (arch-independent) to skip emulated npm ci;
+# build with:  npm ci && (cd frontend/eda && npx vite build)
+#              docker build -f Dockerfile.eda --platform linux/amd64 -t <tag> .
+FROM nginxinc/nginx-unprivileged:1.27
+# The operator's injected nginx.conf lacks a `pid` directive, so nginx uses the
+# compiled-in /var/run/nginx.pid — make it writable for the non-root user.
+USER root
+RUN touch /var/run/nginx.pid \
+    && chown nginx:nginx /var/run/nginx.pid \
+    && chown -R nginx:nginx /var/cache/nginx
+USER nginx
+COPY --chown=nginx:nginx frontend/eda/dist /usr/share/nginx/html
+EXPOSE 8080
