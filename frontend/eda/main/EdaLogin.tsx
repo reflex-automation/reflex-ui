@@ -19,7 +19,7 @@ export function EdaLogin(props: { children: React.ReactNode }) {
           refreshActiveEdaUser?.();
           void mutate(() => true);
         }}
-        brandImg="/eda-logo.svg"
+        brandImg="/reflex-logo.svg"
         brandImgAlt={process.env.PRODUCT as unknown as string}
         showLoginForm={true}
       />
