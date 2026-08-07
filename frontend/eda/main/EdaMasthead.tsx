@@ -46,7 +46,7 @@ export function EdaMasthead() {
               id="documentation"
               isExternalLink
               component="a"
-              href="https://access.redhat.com/documentation/en-us/red_hat_ansible_automation_platform/2.4/html/eda-getting-started-guide/index"
+              href="https://github.com/reflex-automation"
               data-cy="masthead-documentation"
               data-testid="masthead-documentation"
             >
@@ -54,7 +54,7 @@ export function EdaMasthead() {
             </DropdownItem>
             <DropdownItem
               id="about"
-              onClick={() => openAnsibleAboutModal({ brandImageSrc: '/assets/eda-logo.svg' })}
+              onClick={() => openAnsibleAboutModal({ brandImageSrc: '/eda-logo.svg' })}
               data-cy="masthead-about"
               data-testid="masthead-about"
             >

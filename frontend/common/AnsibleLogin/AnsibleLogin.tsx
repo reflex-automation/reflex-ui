@@ -24,6 +24,8 @@ import { createRequestError, RequestError } from '../crud/RequestError';
 import { AuthOption, SocialAuthLogin } from '../SocialAuthLogin';
 import { validateUrlPath } from './validateUrlPath';
 
+const productName = process.env.PRODUCT ?? 'Ansible';
+
 const LoginFooter = styled(PFLoginFooter)`
   color: var(--pf-t--color--white);
 
@@ -173,7 +175,7 @@ export function AnsibleLogin(props: {
   // SEE: https://github.com/patternfly/patternfly-react/blob/main/packages/react-core/src/components/LoginPage/LoginPage.tsx
   return (
     <ErrorBoundary message={translations.errorText}>
-      <title>{t`Login | Ansible`}</title>
+      <title>{`${t('Login')} | ${productName}`}</title>
       {props.backgroundImgSrc && <BackgroundImage src={props.backgroundImgSrc} />}
       <Login
         header={
