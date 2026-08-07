@@ -18,6 +18,10 @@ const EDA_SERVER = process.env.EDA_SERVER as string;
 const environment: Record<string, string> = {
   EDA_SERVER,
   EDA_API_PREFIX: '/api/eda/v1',
+  // Reflex branding: PRODUCT drives the login alt text, page headers, and the
+  // About modal product name (previously only set by the webpack build).
+  PRODUCT: process.env.PRODUCT ?? 'Reflex',
+  VERSION: process.env.VERSION ?? 'main',
 };
 console.log('Environment', environment);
 
