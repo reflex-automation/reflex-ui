@@ -30,7 +30,7 @@ export function EdaLogin(props: Readonly<{ children: React.ReactNode }>) {
         }}
         brandImg="/reflex-logo.svg"
         brandImgAlt={process.env.PRODUCT as unknown as string}
-        showLoginForm={uiAuth?.show_login_form ?? true}
+        showLoginForm={(uiAuth?.show_login_form ?? true) || !uiAuth?.ssos?.length}
       />
     );
   }
