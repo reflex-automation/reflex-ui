@@ -38,7 +38,7 @@ import { ConstructedInventoryHint } from './components/ConstructedInventoryHint'
 import { LabelHelp } from './components/LabelHelp';
 import { useInventoriesColumns } from './hooks/useInventoriesColumns';
 import { useInventoriesFilters } from './hooks/useInventoriesFilters';
-import jsyaml from 'js-yaml';
+import * as jsyaml from 'js-yaml';
 
 export type InventoryCreate = Inventory & {
   instanceGroups: InstanceGroup[];

@@ -1,4 +1,4 @@
-import jsyaml from 'js-yaml';
+import * as jsyaml from 'js-yaml';
 
 const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
 

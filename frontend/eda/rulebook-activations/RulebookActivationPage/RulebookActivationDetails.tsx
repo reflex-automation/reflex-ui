@@ -24,7 +24,7 @@ import {
   SplitItem,
   Tooltip,
 } from '@patternfly/react-core';
-import jsyaml from 'js-yaml';
+import * as jsyaml from 'js-yaml';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { getEventPersistenceHelpText } from '../constants/eventPersistenceHelpText';

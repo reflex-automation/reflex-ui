@@ -1,4 +1,4 @@
-import jsyaml from 'js-yaml';
+import * as jsyaml from 'js-yaml';
 
 export function jsonToYaml(jsonString: string) {
   if (jsonString.trim() === '') {

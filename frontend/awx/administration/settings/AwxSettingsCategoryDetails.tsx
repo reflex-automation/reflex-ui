@@ -13,7 +13,7 @@ import { PageDetailCodeEditor } from '@ansible/ansible-ui-framework/PageDetails/
 import { useGet } from '@ansible/common-ui/crud/useGet';
 import { ButtonVariant } from '@patternfly/react-core';
 import { PencilAltIcon } from '@patternfly/react-icons';
-import jsyaml from 'js-yaml';
+import * as jsyaml from 'js-yaml';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';

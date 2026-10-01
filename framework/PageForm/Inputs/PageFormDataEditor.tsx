@@ -2,7 +2,7 @@ import { Flex, FlexItem, Icon, ToggleGroup, ToggleGroupItem } from '@patternfly/
 import { CopyIcon, DownloadIcon, UploadIcon } from '@patternfly/react-icons';
 import isDeepEqual from 'fast-deep-equal';
 import getValue from 'get-value';
-import jsyaml, { YAMLException } from 'js-yaml';
+import * as jsyaml from 'js-yaml';
 import { ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { parseJSONPreservingLargeInts, stringifyPreservingLargeInts } from '../../utils/jsonUtils';
 import { safeDump, safeLoad } from '../../utils/yamlSchema';
@@ -519,7 +519,7 @@ export function valueToObject(
     try {
       value = safeLoad(value as string) as object;
     } catch (err) {
-      if (err instanceof Error || err instanceof YAMLException) {
+      if (err instanceof Error || err instanceof jsyaml.YAMLException) {
         return new Error(err.message);
       }
       return {};
@@ -595,7 +595,7 @@ export function objectToString(obj: object, language: DataEditorLanguages): stri
             return yaml;
         }
       } catch (err) {
-        if (err instanceof Error || err instanceof YAMLException) {
+        if (err instanceof Error || err instanceof jsyaml.YAMLException) {
           return err.message;
         }
         return '';
