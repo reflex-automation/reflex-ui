@@ -11,6 +11,7 @@ import {
 import {
   filtersToSearchObj,
   getQueryString,
+  getSystemJobExclusionParams,
   hasValidRequiredFilters,
   isRequiredFilterValid,
 } from './queryString';
@@ -199,6 +200,56 @@ describe('queryString', () => {
       expect(result).toContain('page=1');
       expect(result).toContain('page_size=10');
       expect(result).not.toContain('order_by');
+    });
+
+    test('should include extraSearchParams in query string', () => {
+      const extraSearchParams: [string, string][] = [
+        ['template', '1'],
+        ['template', '2'],
+        ['template', '3'],
+      ];
+
+      const result = getQueryString(mockView, [], {}, extraSearchParams);
+
+      expect(result).toContain('template=1');
+      expect(result).toContain('template=2');
+      expect(result).toContain('template=3');
+    });
+
+    test('should not include extraSearchParams when undefined', () => {
+      const result = getQueryString(mockView, [], {});
+
+      expect(result).toContain('page=1');
+      expect(result).toContain('page_size=10');
+      expect(result).not.toContain('template');
+    });
+
+    test('should combine extraSearchParams with other parameters', () => {
+      const view: IView = {
+        ...mockView,
+        filterState: { name: ['test'] },
+      };
+      const filters: IToolbarFilter[] = [
+        {
+          type: ToolbarFilterType.SingleText,
+          key: 'name',
+          label: 'Name',
+          query: 'name__icontains',
+          placeholder: 'Filter by name',
+          comparison: 'contains',
+        },
+      ];
+      const extraSearchParams: [string, string][] = [
+        ['template', '1'],
+        ['template', '2'],
+      ];
+
+      const result = getQueryString(view, filters, { tz: 'UTC' }, extraSearchParams);
+
+      expect(result).toContain('name__icontains=test');
+      expect(result).toContain('tz=UTC');
+      expect(result).toContain('template=1');
+      expect(result).toContain('template=2');
     });
   });
 
@@ -517,6 +568,42 @@ describe('queryString', () => {
     });
   });
 
+  describe('getSystemJobExclusionParams', () => {
+    const templateIds: [string, string][] = [
+      ['template', '1'],
+      ['template', '2'],
+      ['template', '3'],
+    ];
+
+    test('should return template IDs when no user template filter is active', () => {
+      expect(getSystemJobExclusionParams({}, templateIds)).toEqual(templateIds);
+    });
+
+    test('should return template IDs when filterState is undefined', () => {
+      expect(getSystemJobExclusionParams(undefined, templateIds)).toEqual(templateIds);
+    });
+
+    test('should return undefined when user has an active template filter', () => {
+      expect(getSystemJobExclusionParams({ template: ['5'] }, templateIds)).toBeUndefined();
+    });
+
+    test('should return undefined when templateIds is undefined (still loading)', () => {
+      expect(getSystemJobExclusionParams({}, undefined)).toBeUndefined();
+    });
+
+    test('should return empty array when templateIds is empty (no templates on instance)', () => {
+      expect(getSystemJobExclusionParams({}, [])).toEqual([]);
+    });
+
+    test('should return undefined when user has template filter and templateIds is empty', () => {
+      expect(getSystemJobExclusionParams({ template: ['5'] }, [])).toBeUndefined();
+    });
+
+    test('should ignore non-template filters', () => {
+      expect(getSystemJobExclusionParams({ name: ['test'] }, templateIds)).toEqual(templateIds);
+    });
+  });
+
   describe('isRequiredFilterValid', () => {
     const requiredDateRangeFilter: IToolbarFilter = {
       type: ToolbarFilterType.DateRange,
@@ -605,6 +692,46 @@ describe('queryString', () => {
       expect(
         isRequiredFilterValid(requiredDateRangeFilter, { period: ['custom', '2024-13-45'] })
       ).toBe(false);
+    });
+
+    test('should return false when start date is after end date', () => {
+      expect(
+        isRequiredFilterValid(requiredDateRangeFilter, {
+          period: ['custom', '2024-01-31', '2024-01-01'],
+        })
+      ).toBe(false);
+    });
+
+    test('should return true when start date equals end date', () => {
+      expect(
+        isRequiredFilterValid(requiredDateRangeFilter, {
+          period: ['custom', '2024-01-15', '2024-01-15'],
+        })
+      ).toBe(true);
+    });
+
+    test('should return false when only a start date after today is provided (end defaults to today)', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-06-15T12:00:00Z'));
+      try {
+        expect(
+          isRequiredFilterValid(requiredDateRangeFilter, { period: ['custom', '2024-06-16'] })
+        ).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    test('should return true when only a start date of today is provided (end defaults to today)', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-06-15T12:00:00Z'));
+      try {
+        expect(
+          isRequiredFilterValid(requiredDateRangeFilter, { period: ['custom', '2024-06-15'] })
+        ).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     describe('timezones west of UTC', () => {
