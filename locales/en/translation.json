@@ -10,6 +10,8 @@
     "(e.g. average salary of mid-level Software Engineer)": "(e.g. average salary of mid-level Software Engineer)",
     "(latest)": "(latest)",
     "(No dependencies)": "(No dependencies)",
+    "Select webhook credential": "Select webhook credential",
+    "Sync this project on push. Set the webhook content type to application/json and use the credential secret as the webhook secret.": "Sync this project on push. Set the webhook content type to application/json and use the credential secret as the webhook secret.",
     "{{count}} inventories_one": "{{count}} inventory",
     "{{count}} inventories_other": "{{count}} inventories",
     "{{count}} more": "{{count}} more",

@@ -361,4 +361,49 @@ describe('ProjectDetails - SCM Update Fields', () => {
     expect(screen.getByText('Name')).toBeInTheDocument();
     expect(screen.getByText('Source control type')).toBeInTheDocument();
   });
+
+  it('should display webhook credential link and copyable URL when set', async () => {
+    server.use(
+      http.get(edaAPI`/projects/1/`, () =>
+        HttpResponse.json({
+          ...mockProject,
+          webhook_credential: { id: 30, name: 'My Hook Cred' },
+          webhook_path: '/api/eda/v1/external_project/abc/post/',
+        })
+      )
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/projects/1/details']}>
+        <Routes>
+          <Route path="/projects/:id/details" element={<ProjectDetails />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: 'My Hook Cred' })).toBeInTheDocument();
+    expect(screen.getByText('Webhook URL')).toBeInTheDocument();
+    expect(
+      screen.getByText(`${window.location.origin}/api/eda/v1/external_project/abc/post/`)
+    ).toBeInTheDocument();
+  });
+
+  it('should not display Webhook URL when webhook_path is null', async () => {
+    server.use(
+      http.get(edaAPI`/projects/1/`, () =>
+        HttpResponse.json({ ...mockProject, webhook_credential: null, webhook_path: null })
+      )
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/projects/1/details']}>
+        <Routes>
+          <Route path="/projects/:id/details" element={<ProjectDetails />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByText('Test Project');
+    expect(screen.queryByText('Webhook URL')).not.toBeInTheDocument();
+  });
 });

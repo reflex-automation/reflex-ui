@@ -10,6 +10,8 @@
     "(e.g. average salary of mid-level Software Engineer)": "(_E_._G_._ _A_V_E_R_A_G_E_ _S_A_L_A_R_Y_ _O_F_ _M_I_D_-_L_E_V_E_L_ _S_O_F_T_W_A_R_E_ _E_N_G_I_N_E_E_R_)",
     "(latest)": "(_L_A_T_E_S_T_)",
     "(No dependencies)": "(_N_O_ _D_E_P_E_N_D_E_N_C_I_E_S_)",
+    "Select webhook credential": "S_E_L_E_C_T_ _W_E_B_H_O_O_K_ _C_R_E_D_E_N_T_I_A_L",
+    "Sync this project on push. Set the webhook content type to application/json and use the credential secret as the webhook secret.": "S_Y_N_C_ _T_H_I_S_ _P_R_O_J_E_C_T_ _O_N_ _P_U_S_H_._ _S_E_T_ _T_H_E_ _W_E_B_H_O_O_K_ _C_O_N_T_E_N_T_ _T_Y_P_E_ _T_O_ _A_P_P_L_I_C_A_T_I_O_N_/_J_S_O_N_ _A_N_D_ _U_S_E_ _T_H_E_ _C_R_E_D_E_N_T_I_A_L_ _S_E_C_R_E_T_ _A_S_ _T_H_E_ _W_E_B_H_O_O_K_ _S_E_C_R_E_T_.",
     "{{count}} inventories_one": "{{count}}_ _I_N_V_E_N_T_O_R_I_E_S",
     "{{count}} inventories_other": "{{count}}_ _I_N_V_E_N_T_O_R_I_E_S",
     "{{count}} more": "{{count}}_ _M_O_R_E",
