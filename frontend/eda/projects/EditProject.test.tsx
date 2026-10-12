@@ -249,6 +249,29 @@ describe('EditProject - SCM Update on Launch', () => {
       expect(await screen.findByText('GH Hook')).toBeInTheDocument();
     });
 
+    it('should send webhook_credential_id null when (none) is selected', async () => {
+      const user = userEvent.setup();
+      let body: Record<string, unknown> | undefined;
+      server.use(
+        http.patch(edaAPI`/projects/1/`, async ({ request }) => {
+          body = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json(mockProjectResponse);
+        })
+      );
+      render(
+        <MemoryRouter initialEntries={['/projects/1/edit']}>
+          <Routes>
+            <Route path="/projects/:id/edit" element={<EditProject />} />
+          </Routes>
+        </MemoryRouter>
+      );
+      await user.click(await screen.findByText('GH Hook'));
+      await user.click(await screen.findByRole('option', { name: '(none)' }));
+      await user.click(screen.getByRole('button', { name: /Save project/i }));
+      await waitFor(() => expect(body).toBeDefined());
+      expect(body?.webhook_credential_id).toBeNull();
+    });
+
     it('should show Cache Timeout field with default value when scm_update_on_launch is checked', async () => {
       const user = userEvent.setup();
 

@@ -315,14 +315,13 @@ function ProjectEditInputs() {
             'Sync this project on push. Set the webhook content type to application/json and use the credential secret as the webhook secret.'
           )}
           placeholderText={t('Select webhook credential')}
-          options={
-            webhookCredentials?.results
-              ? webhookCredentials.results.map((item: { name: string; id: number }) => ({
-                  label: item.name,
-                  value: item.id,
-                }))
-              : []
-          }
+          options={[
+            { label: t('(none)'), value: null },
+            ...(webhookCredentials?.results ?? []).map((item: { name: string; id: number }) => ({
+              label: item.name,
+              value: item.id,
+            })),
+          ]}
         />
       </PageFormSection>
       <PageFormSection singleColumn>
