@@ -6,8 +6,8 @@ use with open-source AWX-compatible controllers, mainly
 
 Red Hat actively develops EDA and the AAP UI in public. Reflex adds what
 upstream doesn't carry by default: standalone compatibility fixes (for
-example, the server defaults to AAP gateway mode, which breaks standalone
-login) and a user-facing rebrand. It tracks the ansible/* repos as friendly
+example, upstream's server defaults to AAP gateway mode, which breaks
+standalone login) and a user-facing rebrand. It tracks the ansible/* repos as friendly
 forks: the patch set stays small, upstream merges happen regularly, CVEs
 get patched, and releases are smoke-tested end to end against Ascender.
 
@@ -41,12 +41,12 @@ docker build -f Dockerfile.eda --platform linux/amd64 \
 
 ```bash
 npm ci
-EDA_SERVER=http://localhost:8000 npm run eda   # EDA UI dev server on :4103
+(cd frontend/eda && EDA_SERVER=http://localhost:8000 npm start)   # dev server on :4103
 npm test                                       # eslint + tsc + prettier + vitest
 npm run fix                                    # eslint:fix + prettier:fix
 ```
 
-See [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) and the
+See [CONTRIBUTING.md](./CONTRIBUTING.md) and the
 [framework README](./framework/README.md) for the wider monorepo.
 
 ## License and attribution
