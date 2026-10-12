@@ -6,30 +6,38 @@ import {
   useBreakpoint,
 } from '@ansible/ansible-ui-framework';
 import { PageAsyncSingleSelect } from '@ansible/ansible-ui-framework/PageInputs/PageAsyncSingleSelect';
-import { Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem } from '@patternfly/react-core';
-import React, { useCallback, useEffect } from 'react';
+import {
+  Toolbar,
+  ToolbarContent,
+  ToolbarGroup,
+  ToolbarItem,
+  yyyyMMddFormat,
+} from '@patternfly/react-core';
+import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAutomationDashboardToolbarActions } from '../common/useAutomationDashboardToolbarActions';
 import { AutomationDashboardDateRangeFilterPresets } from '../constants';
 import { IDashboardFilterSet, IJobTemplate } from '../types';
 import { useFilterSetView } from '../views/useFilterSetView';
+import { isFilterStateShape } from '../utils/persistedFilterState';
 
 const DEFAULT_FILTER_STATE: IFilterState = {
   period: [AutomationDashboardDateRangeFilterPresets.last_7_days],
 };
 
+const CUSTOM_RANGE_DEFAULT_FROM_DAYS = 7;
+
+function getDefaultCustomFrom(): string {
+  const date = new Date();
+  date.setDate(date.getDate() - CUSTOM_RANGE_DEFAULT_FROM_DAYS);
+  return yyyyMMddFormat(date);
+}
+
 function parseFilterState(raw: string): IFilterState {
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (
-      parsed !== null &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed) &&
-      Object.values(parsed as Record<string, unknown>).every(
-        (v) => Array.isArray(v) && v.every((entry) => typeof entry === 'string')
-      )
-    ) {
-      return parsed as IFilterState;
+    if (isFilterStateShape(parsed)) {
+      return parsed;
     }
   } catch {
     return DEFAULT_FILTER_STATE;
@@ -67,6 +75,27 @@ export function DashboardToolbar(
       setSelectedFilterSet(undefined);
     });
   }, [registerClearCallback, setValue, setSelectedFilterSet]);
+
+  // When the user switches the period filter to Custom with no dates yet, seed the
+  // start date to 7 days ago (matching "Last 7 days") instead of leaving it empty.
+  // Only fires on the transition into Custom, so manually clearing the start date
+  // afterwards isn't immediately overwritten.
+  const previousPeriodPresetRef = useRef<string | undefined>(filterState?.period?.[0]);
+  useEffect(() => {
+    const period = filterState?.period;
+    const currentPreset = period?.[0];
+    const enteringCustom =
+      currentPreset === AutomationDashboardDateRangeFilterPresets.custom &&
+      previousPeriodPresetRef.current !== AutomationDashboardDateRangeFilterPresets.custom;
+    previousPeriodPresetRef.current = currentPreset;
+
+    if (enteringCustom && period?.length === 1) {
+      setFilterState?.((prev) => ({
+        ...prev,
+        period: [AutomationDashboardDateRangeFilterPresets.custom, getDefaultCustomFrom()],
+      }));
+    }
+  }, [filterState?.period, setFilterState]);
 
   const applyFilterSet = useCallback(
     (filterSet: IDashboardFilterSet) => {
