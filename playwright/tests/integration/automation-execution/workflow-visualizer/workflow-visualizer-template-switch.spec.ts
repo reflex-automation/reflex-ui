@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { createE2EName } from '@ansible/playwright/commands/createE2EName';
+import { fillMonacoEditor } from '@ansible/playwright/commands/fillMonacoEditor';
 import { setupAfter, setupBefore } from '@ansible/playwright/commands/setup';
 import { awxAPI } from '@ansible/playwright/commands/apiClient';
 import { Credential, JobTemplate, WorkflowVisualizer } from '@ansible/playwright/utils';
@@ -47,10 +48,38 @@ async function getNodeCredentials(page: import('@playwright/test').Page, nodeId:
 
 async function saveAndDismissToast(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: 'Fit to Screen' }).click();
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
-  const toast = page.getByText('Successfully saved workflow visualizer');
-  await expect(toast).toBeVisible({ timeout: 30000 });
-  const closeBtn = page.getByRole('button', { name: /Close.*alert/ });
+
+  // The toolbar Save is disabled until the visualizer registers the pending
+  // edit, so wait for it to become enabled instead of clicking a dead button.
+  const saveButton = page.getByTestId('workflow-visualizer-toolbar-save');
+  await expect(saveButton).toBeEnabled({ timeout: 30000 });
+  await saveButton.click();
+
+  // Saving issues a sequence of node and credential requests, so on a live
+  // backend the outcome regularly takes longer than the old 30s budget. Assert
+  // on the success toast or the failure alert, whichever lands first: waiting
+  // only on the toast reports a failed save as an opaque "element(s) not
+  // found" and hides the server error that explains it. Keep the budget under
+  // the per-test timeout: this helper runs several times per test, so a larger
+  // value would just trade the reported error for a generic test timeout.
+  const toaster = page.getByTestId('alert-toaster');
+  const toast = toaster.getByText('Successfully saved workflow visualizer');
+  const errorAlert = toaster.getByText('Failed to save workflow job template');
+  await expect(toast.or(errorAlert).first()).toBeVisible({ timeout: 60000 });
+
+  if (
+    await errorAlert
+      .first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    const alertText = await toaster.innerText();
+    throw new Error(`Workflow visualizer save failed: ${alertText.trim()}`);
+  }
+
+  // The success toast self-dismisses after 5s, so closing it is best effort —
+  // requiring the close button would just move the race rather than remove it.
+  const closeBtn = toaster.getByRole('button', { name: /Close.*alert/ });
   if (await closeBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     await closeBtn.click();
   }
@@ -285,7 +314,7 @@ test.describe('Workflow Visualizer - Template Switch', () => {
       await page.getByRole('button', { name: 'Next' }).nth(0).click({ force: true });
 
       await page.getByRole('button', { name: 'Prompts' }).click();
-      await page.getByRole('textbox', { name: 'Editor content' }).fill('my_var: test_value');
+      await fillMonacoEditor(page, 'my_var: test_value');
       await page.getByRole('button', { name: 'Next' }).click();
       await page.waitForTimeout(500);
       await page.getByRole('button', { name: 'Finish' }).click();
@@ -372,7 +401,7 @@ test.describe('Workflow Visualizer - Template Switch', () => {
       await page.getByRole('checkbox', { name: credentialName }).check();
       await page.getByRole('button', { name: 'Credentials' }).click();
       // Set extra_vars
-      await page.getByRole('textbox', { name: 'Editor content' }).fill('stale_var: old_value');
+      await fillMonacoEditor(page, 'stale_var: old_value');
       // Set skip_tags
       await page.getByRole('textbox', { name: 'Type to filter' }).last().click();
       await page.getByRole('textbox', { name: 'Type to filter' }).last().fill('stale_tag');
@@ -545,7 +574,7 @@ test.describe('Workflow Visualizer - Template Switch', () => {
       await page.getByRole('button', { name: 'Next' }).nth(0).click({ force: true });
 
       await page.getByRole('button', { name: 'Prompts' }).click();
-      await page.getByRole('textbox', { name: 'Editor content' }).fill('old_var: stale_value');
+      await fillMonacoEditor(page, 'old_var: stale_value');
       await page.getByRole('button', { name: 'Next' }).click();
       await page.waitForTimeout(500);
       await page.getByRole('button', { name: 'Finish' }).click();
@@ -566,8 +595,8 @@ test.describe('Workflow Visualizer - Template Switch', () => {
 
       // Navigate to Prompts then wait for the extra_vars editor to clear.
       await page.getByRole('button', { name: 'Prompts' }).click();
-      await expect(page.getByRole('textbox', { name: 'Editor content' })).not.toHaveValue(
-        /old_var/,
+      await expect(page.locator('.monaco-editor .view-lines').first()).not.toContainText(
+        'old_var',
         { timeout: 15000 }
       );
 
@@ -645,7 +674,7 @@ test.describe('Workflow Visualizer - Template Switch', () => {
       await page.getByRole('textbox', { name: 'Search input' }).fill(oldCredName);
       await page.getByRole('checkbox', { name: oldCredName }).check();
       await page.getByRole('button', { name: 'Credentials' }).click();
-      await page.getByRole('textbox', { name: 'Editor content' }).fill('old_var: old');
+      await fillMonacoEditor(page, 'old_var: old');
       await page.getByRole('button', { name: 'Next' }).click();
       await page.waitForTimeout(500);
       await page.getByRole('button', { name: 'Finish' }).click();
@@ -670,7 +699,7 @@ test.describe('Workflow Visualizer - Template Switch', () => {
       await page.getByRole('textbox', { name: 'Search input' }).fill(newCredName);
       await page.getByRole('checkbox', { name: newCredName }).check();
       await page.getByRole('button', { name: 'Credentials' }).click();
-      await page.getByRole('textbox', { name: 'Editor content' }).fill('new_var: fresh');
+      await fillMonacoEditor(page, 'new_var: fresh');
       await page.getByRole('button', { name: 'Next' }).click();
       await page.waitForTimeout(500);
       await page.getByRole('button', { name: 'Finish' }).click();
