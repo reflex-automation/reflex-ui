@@ -331,6 +331,14 @@ export function RulebookActivationInputs() {
             )}
             name="restart_on_project_update"
           />
+          <PageFormCheckbox<IEdaRulebookActivationInputs>
+            label={t`Suggest only`}
+            labelHelpTitle={t('Suggest only')}
+            labelHelp={t(
+              'When enabled, rules are evaluated and shown in the Rule Audit, but job templates, workflow templates, playbooks and modules are not run. A debug message is logged instead.'
+            )}
+            name="suggest_only"
+          />
           <PageFormCheckbox
             label={t`Enable event persistence`}
             labelHelpTitle={t('Enable event persistence')}

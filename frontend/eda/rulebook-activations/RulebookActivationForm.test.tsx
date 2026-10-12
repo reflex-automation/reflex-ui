@@ -158,6 +158,7 @@ describe('CreateRulebookActivation', () => {
     expect(
       screen.getByRole('checkbox', { name: /Auto-restart on project update/ })
     ).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /Suggest only/ })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /Enable event persistence/ })).toBeInTheDocument();
   });
 
@@ -215,6 +216,8 @@ describe('CreateRulebookActivation', () => {
       });
       expect(persistenceCheckbox).not.toBeChecked();
     });
+
+    expect(screen.getByRole('checkbox', { name: /Suggest only/ })).not.toBeChecked();
   });
 });
 

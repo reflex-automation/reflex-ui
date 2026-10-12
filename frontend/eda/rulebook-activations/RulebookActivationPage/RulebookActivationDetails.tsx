@@ -277,6 +277,7 @@ export function RulebookActivationDetails() {
         )}
         {(!!rulebookActivation?.skip_audit_events ||
           !!rulebookActivation.restart_on_project_update ||
+          !!rulebookActivation.suggest_only ||
           !!rulebookActivation?.enable_persistence) && (
           <PageDetail label={t('Enabled options')} id="enabled-option">
             <Content component={ContentVariants.ul}>
@@ -299,6 +300,17 @@ export function RulebookActivationDetails() {
                     header={t('Auto-restart on project update')}
                     content={t(
                       'When enabled, this rulebook activation automatically restarts when its associated project resyncs, so it runs with the latest project content.'
+                    )}
+                  />
+                </Content>
+              )}
+              {!!rulebookActivation.suggest_only && (
+                <Content component={ContentVariants.li}>
+                  {t('Suggest only')}
+                  <StandardPopover
+                    header={t('Suggest only')}
+                    content={t(
+                      'When enabled, rules are evaluated and shown in the Rule Audit, but job templates, workflow templates, playbooks and modules are not run. A debug message is logged instead.'
                     )}
                   />
                 </Content>

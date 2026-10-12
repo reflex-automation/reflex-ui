@@ -85,6 +85,47 @@ describe('RulebookActivationDetails - Options', () => {
     expect(await screen.findByText('Skip audit events')).toBeInTheDocument();
   });
 
+  it('should display suggest only option when enabled', async () => {
+    server.use(
+      http.get(edaAPI`/activations/1/`, () =>
+        HttpResponse.json({
+          ...mockActivation,
+          restart_on_project_update: false,
+          suggest_only: true,
+        })
+      )
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/rulebook-activations/1/details']}>
+        <Routes>
+          <Route path="/rulebook-activations/:id/details" element={<RulebookActivationDetails />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Suggest only')).toBeInTheDocument();
+  });
+
+  it('should not display suggest only option when disabled', async () => {
+    server.use(
+      http.get(edaAPI`/activations/1/`, () =>
+        HttpResponse.json({ ...mockActivation, suggest_only: false })
+      )
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/rulebook-activations/1/details']}>
+        <Routes>
+          <Route path="/rulebook-activations/:id/details" element={<RulebookActivationDetails />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByText('Enabled options');
+    expect(screen.queryByText('Suggest only')).not.toBeInTheDocument();
+  });
+
   it('should not display enable event persistence option when disabled', async () => {
     server.use(
       http.get(edaAPI`/activations/1/`, () =>

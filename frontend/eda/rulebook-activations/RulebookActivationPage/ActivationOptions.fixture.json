@@ -873,6 +873,11 @@
         "label": "Skip audit events",
         "help_text": "Skip audit events for activation"
       },
+      "suggest_only": {
+        "type": "boolean",
+        "label": "Suggest only",
+        "help_text": "Evaluate rules but do not run actions"
+      },
       "log_tracking_id": {
         "type": "string",
         "label": "Log tracking id",
@@ -1004,6 +1009,13 @@
         "required": false,
         "label": "Skip audit events",
         "help_text": "Skip audit events for activation",
+        "default": "<class 'rest_framework.fields.empty'>"
+      },
+      "suggest_only": {
+        "type": "boolean",
+        "required": false,
+        "label": "Suggest only",
+        "help_text": "Evaluate rules but do not run actions",
         "default": "<class 'rest_framework.fields.empty'>"
       }
     }
