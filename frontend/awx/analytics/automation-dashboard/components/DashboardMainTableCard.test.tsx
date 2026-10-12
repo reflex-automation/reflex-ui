@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
-import { SWRConfig } from 'swr';
 import { ReactNode } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
@@ -70,8 +69,6 @@ const mockDetails: IDashboardDetails = {
   total_time_saving: 50,
   total_number_of_host_job_runs: 15,
   total_number_of_job_runs: 12,
-  top_projects: [{ id: 1, name: 'Project A', execution_count: 3 }],
-  top_users: [{ id: 1, name: 'User A', execution_count: 2 }],
   job_chart: { kind: 'day', items: [{ label: '2024-01-01', value: 1 }] },
   host_chart: { kind: 'day', items: [{ label: '2024-01-01', value: 1 }] },
 };
@@ -125,6 +122,8 @@ function buildProps(overrides: Partial<IAutomationDashboardView> = {}): IAutomat
     details: mockDetails,
     detailsError: undefined,
     detailsLoading: false,
+    templateIdsError: undefined,
+    isLoadingTemplateIds: false,
     costState: {
       id: 1,
       monthly_subscription_cost: 100,
@@ -144,11 +143,7 @@ function buildProps(overrides: Partial<IAutomationDashboardView> = {}): IAutomat
 function Wrapper({ children }: { children: ReactNode }) {
   return (
     <MemoryRouter>
-      <SWRConfig
-        value={{ dedupingInterval: 0, provider: () => new Map(), shouldRetryOnError: false }}
-      >
-        <PageAlertToasterProvider>{children}</PageAlertToasterProvider>
-      </SWRConfig>
+      <PageAlertToasterProvider>{children}</PageAlertToasterProvider>
     </MemoryRouter>
   );
 }
@@ -203,6 +198,18 @@ describe('DashboardMainTableCard', () => {
     expect(
       within(screen.getByTestId('total-hours-saved-card')).getByText(/50 h/)
     ).toBeInTheDocument();
+  });
+
+  test('should render parent title in the card header at xl size', () => {
+    renderCard();
+    expect(screen.getByText('Cost calculation')).toHaveClass('pf-m-xl');
+  });
+
+  test('should render nested KPI titles as description list labels rather than card headers', () => {
+    renderCard();
+    // Only the parent card renders a PageDashboardCard header title.
+    expect(screen.getAllByTestId('card-title')).toHaveLength(1);
+    expect(screen.getByText('Cost of manual automation')).not.toHaveClass('pf-m-xl');
   });
 
   test('should display 0 in value cards when details has zero values', () => {

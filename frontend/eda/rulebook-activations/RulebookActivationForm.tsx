@@ -56,6 +56,7 @@ export function CreateRulebookActivation() {
   const pageNavigate = usePageNavigate();
 
   const postEdaRulebookActivation = usePostRequest<object, EdaRulebookActivation>();
+  const { data: optionsData } = useOptions<OptionsResponse<ActionsResponse>>(edaAPI`/activations/`);
   const { data: organizations } = useSWR<EdaResult<EdaOrganization>>(
     edaAPI`/organizations/?name=Default`,
     requestGet
@@ -103,6 +104,7 @@ export function CreateRulebookActivation() {
           is_enabled: true,
           enable_persistence: false,
         }}
+        optionsData={optionsData}
       >
         <RulebookActivationInputs />
       </EdaPageForm>
@@ -120,7 +122,7 @@ export function RulebookActivationInputs() {
 
   const [sourceMappings, setSourceMappings] = useState<EdaSourceEventMapping[] | undefined>(() => {
     return defaultValues?.source_mappings
-      ? (jsyaml.load(defaultValues?.source_mappings as string) as EdaSourceEventMapping[])
+      ? (jsyaml.load(defaultValues?.source_mappings) as EdaSourceEventMapping[])
       : undefined;
   });
   const restartPolicyHelpBlock = (
@@ -339,7 +341,10 @@ export function RulebookActivationInputs() {
       </PageFormSection>
       {enablePersistence && config && !config.managed_cloud_install && (
         <PageFormSection title={t('Option Details')}>
-          <PageFormRuleEngineCredentialSelect<IEdaRulebookActivationInputs> name="rule_engine_credential_id" />
+          <PageFormRuleEngineCredentialSelect<IEdaRulebookActivationInputs>
+            name="rule_engine_credential_id"
+            isRequired
+          />
         </PageFormSection>
       )}
     </>
@@ -351,10 +356,10 @@ export function EditRulebookActivation() {
   const navigate = useNavigate();
   const params = useParams<{ id?: string }>();
   const id = Number(params.id);
-  const { data } = useOptions<OptionsResponse<ActionsResponse>>(
+  const { data: optionsData } = useOptions<OptionsResponse<ActionsResponse>>(
     edaAPI`/activations/${params.id ?? ''}/`
   );
-  const canEditRulebookActivation = data ? Boolean(data.actions?.['PATCH']) : true;
+  const canEditRulebookActivation = optionsData ? Boolean(optionsData.actions?.['PATCH']) : true;
 
   const { data: rulebookActivation } = useGet<EdaRulebookActivation>(
     edaAPI`/activations/${id.toString()}/`
@@ -434,6 +439,7 @@ export function EditRulebookActivation() {
               event_streams: rulebookActivation.event_streams as [],
               rule_engine_credential_id: rulebookActivation.rule_engine_credential_id || null,
             }}
+            optionsData={optionsData}
           >
             <RulebookActivationInputs />
           </EdaPageForm>
@@ -443,13 +449,16 @@ export function EditRulebookActivation() {
   }
 }
 
-export type IEdaRulebookActivationInputs = Omit<EdaRulebookActivationCreate, 'event_streams'> & {
+export type IEdaRulebookActivationInputs = Omit<
+  EdaRulebookActivationCreate,
+  'event_streams' | 'source_mappings'
+> & {
   rulebook: EdaRulebook;
   event_streams?: string[];
   project_id: string;
   eda_credentials?: number[] | EdaCredential[] | null;
   enable_persistence?: boolean;
   rule_engine_credential_id?: number | null;
-  source_mappings: EdaSourceEventMapping[];
+  source_mappings?: string;
   restart_on_project_update: boolean;
 };

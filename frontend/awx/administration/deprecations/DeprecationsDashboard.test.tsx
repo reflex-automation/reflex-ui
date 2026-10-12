@@ -1,19 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { SWRConfig } from 'swr';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { awxAPI } from '../../common/api/awx-utils';
 import { DeprecationsDashboard } from './DeprecationsDashboard';
 
-function Wrapper({ children }: { children: ReactNode }) {
-  return (
-    <MemoryRouter>
-      <SWRConfig value={{ provider: () => new Map() }}>{children}</SWRConfig>
-    </MemoryRouter>
-  );
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return <MemoryRouter>{children}</MemoryRouter>;
 }
 
 const mockJobsResponse = {
@@ -118,8 +112,10 @@ describe('DeprecationsDashboard', () => {
     expect(screen.getByText('Total occurrences')).toBeInTheDocument();
     expect(screen.getByText('Severity')).toBeInTheDocument();
 
-    // Check deprecation type appears
-    expect(screen.getByText('with_items on module')).toBeInTheDocument();
+    // Check deprecation type appears (async data processing may take an extra render cycle)
+    await waitFor(() => {
+      expect(screen.getByText('with_items on module')).toBeInTheDocument();
+    });
   });
 
   it('should display empty state when no deprecations found', async () => {
@@ -225,10 +221,10 @@ describe('DeprecationsDashboard', () => {
       expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     });
 
-    // Toolbar filters should be present (exact text/labels may vary by PF version)
-    // Check that the table toolbar exists and has filter controls
-    const searchInput = screen.getByPlaceholderText('Enter search');
-    expect(searchInput).toBeInTheDocument();
+    // Toolbar filters render after data fetch; wait for the search control.
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Enter search')).toBeInTheDocument();
+    });
   });
 
   it('should display stat card values as zero when no data', async () => {

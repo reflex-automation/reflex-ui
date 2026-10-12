@@ -265,6 +265,35 @@ describe('InventoryHostGroups', () => {
     });
   });
 
+  it('should not request /inventories/undefined/ when the host has no inventory (regression: String(x) ?? "" bug)', async () => {
+    // Uses a distinct host id (999) so this test's SWR cache entry can't collide
+    // with the /hosts/1/ entry the other tests in this file share.
+    const requestedInventoryUrls: string[] = [];
+    server.use(
+      http.get(
+        ({ request }: { request: Request }) =>
+          request.url.includes('/hosts/999/') && !request.url.includes('all_groups'),
+        () => HttpResponse.json({ ...mockHost, id: 999, inventory: undefined })
+      ),
+      http.get(
+        ({ request }: { request: Request }) =>
+          request.url.includes('/inventories/') && request.url.endsWith('/'),
+        ({ request }: { request: Request }) => {
+          requestedInventoryUrls.push(request.url);
+          return HttpResponse.json({ id: 1, type: 'inventory', name: 'Default' });
+        }
+      )
+    );
+
+    renderInventoryHostGroups('inventory', '/inventories/inventory/1/hosts/999/groups');
+
+    await waitFor(() => {
+      expect(screen.getByText('Test groups 1')).toBeInTheDocument();
+    });
+
+    expect(requestedInventoryUrls.some((url) => url.includes('/undefined/'))).toBe(false);
+  });
+
   it('should disable Edit group when user lacks edit capability', async () => {
     server.use(
       http.get(
@@ -279,8 +308,10 @@ describe('InventoryHostGroups', () => {
       expect(screen.getByText('Test groups 1')).toBeInTheDocument();
     });
 
-    const editButtons = screen.getAllByRole('button', { name: /Edit group/ });
-    expect(editButtons.length).toBeGreaterThan(0);
-    expect(editButtons[0]).toHaveAttribute('aria-disabled', 'true');
+    await waitFor(() => {
+      const editButtons = screen.getAllByRole('button', { name: /Edit group/ });
+      expect(editButtons.length).toBeGreaterThan(0);
+      expect(editButtons[0]).toHaveAttribute('aria-disabled', 'true');
+    });
   });
 });
