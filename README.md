@@ -4,11 +4,12 @@ Web UI for Reflex, a community-maintained continuation of Event-Driven
 Ansible (EDA) that targets open-source AWX-compatible controllers, mainly
 [CIQ Ascender](https://ciq.com/products/ascender).
 
-Red Hat stopped developing EDA as a supported open-source product and now
-uses the code as the internal upstream of Ansible Automation Platform.
-Reflex tracks the ansible/* repos as friendly forks: the patch set stays
-small, upstream merges happen regularly, CVEs get patched, and releases
-are smoke-tested end to end against Ascender.
+ansible/ansible-ui and ansible/eda-server are actively developed by Red
+Hat. Reflex tracks them as close friendly forks: the patch set stays small
+and upstream merges happen regularly. It exists for standalone and Ascender
+compatibility fixes upstream doesn't carry by default, features useful to
+AWX and Ascender users, CVE patching, and releases smoke-tested end to end
+against Ascender.
 
 This is a fork of
 [ansible/ansible-ui](https://github.com/ansible/ansible-ui), the AAP UI
@@ -25,6 +26,13 @@ clean, but they are not built or shipped.
   built `frontend/eda` bundle. Upstream ships no standalone EDA UI image.
 - Reflex branding: product name, logos, titles. The vite build now defines
   `PRODUCT` and `VERSION`, which upstream only set in the webpack build.
+- A "Suggest only" checkbox in the rulebook activation options, shown on
+  the activation details page. Rules still evaluate and land in the rule
+  audit, but job template, workflow template, playbook and module actions
+  are replaced by a debug message. Needs the matching reflex-server change.
+- A "Webhook credential" select on the project form (clearable on edit)
+  and a copyable "Webhook URL" on project details, for syncing a project
+  on git push. Needs the matching reflex-server change.
 - Everything else (components, API helpers, tests) stays upstream-shaped.
 
 ## Build the UI image
