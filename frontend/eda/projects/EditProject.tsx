@@ -40,6 +40,9 @@ function ProjectCreateInputs() {
   const { data: verifyCredentials } = useGet<EdaResult<EdaCredential>>(
     edaAPI`/eda-credentials/` + `?credential_type__kind=cryptography&page_size=300`
   );
+  const { data: webhookCredentials } = useGet<EdaResult<EdaCredential>>(
+    edaAPI`/eda-credentials/` + `?credential_type__kind__in=github,gitlab,hmac,token&page_size=300`
+  );
 
   return (
     <>
@@ -134,6 +137,24 @@ function ProjectCreateInputs() {
               : []
           }
         />
+        <PageFormSelect
+          name={'webhook_credential_id'}
+          isRequired={false}
+          label={t('Webhook credential')}
+          labelHelpTitle={t('Webhook credential')}
+          labelHelp={t(
+            'Sync this project on push. Set the webhook content type to application/json and use the credential secret as the webhook secret.'
+          )}
+          placeholderText={t('Select webhook credential')}
+          options={
+            webhookCredentials?.results
+              ? webhookCredentials.results.map((item: { name: string; id: number }) => ({
+                  label: item.name,
+                  value: item.id,
+                }))
+              : []
+          }
+        />
       </PageFormSection>
       <PageFormSection singleColumn>
         <PageFormGroup label={t('Options')}>
@@ -185,6 +206,9 @@ function ProjectEditInputs() {
   );
   const { data: verifyCredentials } = useGet<EdaResult<EdaCredential>>(
     edaAPI`/eda-credentials/` + `?credential_type__kind=cryptography&page_size=300`
+  );
+  const { data: webhookCredentials } = useGet<EdaResult<EdaCredential>>(
+    edaAPI`/eda-credentials/` + `?credential_type__kind__in=github,gitlab,hmac,token&page_size=300`
   );
   return (
     <>
@@ -281,6 +305,23 @@ function ProjectEditInputs() {
                 }))
               : []
           }
+        />
+        <PageFormSelect
+          name={'webhook_credential_id'}
+          isRequired={false}
+          label={t('Webhook credential')}
+          labelHelpTitle={t('Webhook credential')}
+          labelHelp={t(
+            'Sync this project on push. Set the webhook content type to application/json and use the credential secret as the webhook secret.'
+          )}
+          placeholderText={t('Select webhook credential')}
+          options={[
+            { label: t('(none)'), value: null },
+            ...(webhookCredentials?.results ?? []).map((item: { name: string; id: number }) => ({
+              label: item.name,
+              value: item.id,
+            })),
+          ]}
         />
       </PageFormSection>
       <PageFormSection singleColumn>
@@ -444,6 +485,7 @@ export function EditProject() {
               ...project,
               scm_update_cache_timeout: project?.scm_update_cache_timeout || 0,
               eda_credential_id: project?.eda_credential?.id,
+              webhook_credential_id: project?.webhook_credential?.id,
               organization_id: project?.organization?.id,
             }}
             optionsData={optionsData}

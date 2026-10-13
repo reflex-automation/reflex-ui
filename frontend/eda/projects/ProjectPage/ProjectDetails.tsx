@@ -97,6 +97,24 @@ export function ProjectDetails() {
           project?.signature_validation_credential?.name || ''
         )}
       </PageDetail>
+      <PageDetail label={t('Webhook credential')}>
+        {project.webhook_credential ? (
+          <Link
+            to={getPageUrl(EdaRoute.CredentialPage, {
+              params: { id: project.webhook_credential.id },
+            })}
+          >
+            {project.webhook_credential.name}
+          </Link>
+        ) : (
+          ''
+        )}
+      </PageDetail>
+      {project.webhook_path && (
+        <PageDetail label={t('Webhook URL')}>
+          <CopyCell text={window.location.origin + project.webhook_path} />
+        </PageDetail>
+      )}
       <PageDetail label={t('Git hash')}>
         <CopyCell text={project?.git_hash ? project.git_hash : ''} />
       </PageDetail>

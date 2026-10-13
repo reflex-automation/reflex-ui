@@ -32,6 +32,7 @@ const mockProjectResponse = {
   import_error: null,
   organization: { id: 1, name: 'Default' },
   eda_credential: null,
+  webhook_credential: { id: 5, name: 'GH Hook' },
   signature_validation_credential: null,
   created_at: '2024-01-01T00:00:00Z',
   modified_at: '2024-01-01T00:00:00Z',
@@ -48,8 +49,10 @@ const mockCredentialsResponse = {
   count: 0,
   next: null,
   previous: null,
-  results: [],
+  results: [{ id: 5, name: 'GH Hook' }],
 };
+
+const webhookKinds: (string | null)[] = [];
 
 describe('EditProject - SCM Update on Launch', () => {
   let server: ReturnType<typeof setupServer>;
@@ -60,7 +63,11 @@ describe('EditProject - SCM Update on Launch', () => {
       http.options(edaAPI`/projects/1/`, () => HttpResponse.json(mockOptionsResponse)),
       http.get(edaAPI`/projects/1/`, () => HttpResponse.json(mockProjectResponse)),
       http.get(edaAPI`/organizations/`, () => HttpResponse.json(mockOrganizationsResponse)),
-      http.get(edaAPI`/eda-credentials/`, () => HttpResponse.json(mockCredentialsResponse))
+      http.get(edaAPI`/eda-credentials/`, ({ request }) => {
+        const kinds = new URL(request.url).searchParams.get('credential_type__kind__in');
+        if (kinds) webhookKinds.push(kinds);
+        return HttpResponse.json(mockCredentialsResponse);
+      })
     );
     server.listen({ onUnhandledRequest: 'bypass' });
   });
@@ -69,6 +76,19 @@ describe('EditProject - SCM Update on Launch', () => {
   afterAll(() => server.close());
 
   describe('Create Project Form', () => {
+    it('should render the webhook credential select', async () => {
+      render(
+        <MemoryRouter>
+          <CreateProject />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Create project/i })).toBeInTheDocument();
+      });
+      expect(screen.getByText('Select webhook credential')).toBeInTheDocument();
+    });
+
     it('should render "Update revision on launch" checkbox', async () => {
       render(
         <MemoryRouter>
@@ -211,6 +231,45 @@ describe('EditProject - SCM Update on Launch', () => {
           screen.getByText(/you do not have permissions to edit this project/i)
         ).toBeInTheDocument();
       });
+    });
+
+    it('should list webhook credentials by kind and prefill the selected one', async () => {
+      render(
+        <MemoryRouter initialEntries={['/projects/1/edit']}>
+          <Routes>
+            <Route path="/projects/:id/edit" element={<EditProject />} />
+          </Routes>
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Edit Test Project/i })).toBeInTheDocument();
+      });
+      await waitFor(() => expect(webhookKinds).toContain('github,gitlab,hmac,token'));
+      expect(await screen.findByText('GH Hook')).toBeInTheDocument();
+    });
+
+    it('should send webhook_credential_id null when (none) is selected', async () => {
+      const user = userEvent.setup();
+      let body: Record<string, unknown> | undefined;
+      server.use(
+        http.patch(edaAPI`/projects/1/`, async ({ request }) => {
+          body = (await request.json()) as Record<string, unknown>;
+          return HttpResponse.json(mockProjectResponse);
+        })
+      );
+      render(
+        <MemoryRouter initialEntries={['/projects/1/edit']}>
+          <Routes>
+            <Route path="/projects/:id/edit" element={<EditProject />} />
+          </Routes>
+        </MemoryRouter>
+      );
+      await user.click(await screen.findByText('GH Hook'));
+      await user.click(await screen.findByRole('option', { name: '(none)' }));
+      await user.click(screen.getByRole('button', { name: /Save project/i }));
+      await waitFor(() => expect(body).toBeDefined());
+      expect(body?.webhook_credential_id).toBeNull();
     });
 
     it('should show Cache Timeout field with default value when scm_update_on_launch is checked', async () => {
