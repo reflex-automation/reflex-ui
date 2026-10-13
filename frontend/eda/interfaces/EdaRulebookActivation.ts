@@ -6,11 +6,13 @@ export type EdaRulebookActivation = Omit<ActivationRead, 'project'> & {
   project_id: number;
   restart_on_project_update: boolean;
   enable_persistence?: boolean;
+  suggest_only?: boolean;
   rule_engine_credential_id?: number | null;
   rule_engine_credential?: EdaCredential | null;
 };
 export type EdaRulebookActivationCreate = ActivationCreate & {
   enable_persistence?: boolean;
+  suggest_only?: boolean;
   rule_engine_credential_id?: number | null;
 };
 export type EdaRulebookActivationStatus = StatusEnum;
